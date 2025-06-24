@@ -1,25 +1,27 @@
-          <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Mortgage Calculator</title>
+  <!-- Manrope from Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary-color: #0052cc;
+      --primary-color: #162463;
       --gray-100: #f0f4f8;
       --gray-300: #d8d8d8;
       --gray-500: #7a7a7a;
-      --font-sans: 'Helvetica Neue', Arial, sans-serif;
+      --font-sans: 'Manrope', sans-serif;
       --color-pi: #38c6ff;
       --color-tax: #f1c40f;
       --color-hazard: #2ecc71;
       --color-hoa: #e74c3c;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin:0; padding:0; }
     body {
-      font-family: var(--font-sans);
       background: #f5f5f5;
+      font-family: var(--font-sans);
       color: #333;
       padding: 20px;
     }
@@ -34,6 +36,7 @@
     h2 {
       font-size: 24px;
       margin-bottom: 24px;
+      font-weight: 600;
     }
     .flex {
       display: flex;
@@ -90,6 +93,7 @@
       border-radius: 4px;
       background: var(--gray-100);
       text-align: right;
+      font-family: var(--font-sans);
     }
     select {
       width: 100%;
@@ -98,27 +102,30 @@
       border: 1px solid var(--gray-300);
       border-radius: 4px;
       background: #fff;
+      font-family: var(--font-sans);
     }
+    /* Button */
     button {
       margin-top: 10px;
       padding: 12px 24px;
-      background: #4a4a4a;
+      background: var(--primary-color);
       color: #fff;
       border: none;
       border-radius: 24px;
       font-size: 16px;
+      font-family: var(--font-sans);
+      font-weight: 600;
       cursor: pointer;
+      transition: background .2s;
     }
-    button:hover {
-      background: #333;
-    }
+    button:hover { background: #0f1e48; }
 
-    /* --- Doughnut Chart Styles --- */
+    /* Doughnut styles */
     .donut-wrapper {
       position: relative;
       width: 100%;
       max-width: 350px;
-      margin: 0 auto;
+      margin: 0 auto 24px;
     }
     .donut-wrapper canvas {
       display: block;
@@ -130,15 +137,22 @@
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       text-align: center;
-      font-size: 24px;
       font-weight: 600;
       pointer-events: none;
+      line-height: 1.2;
+      color: var(--gray-500);
+      font-family: var(--font-sans);
     }
-    .donut-center span { font-size: 32px; }
-
+    .donut-center span {
+      display: block;
+      font-size: 32px;
+      color: var(--primary-color);
+      margin-top: 4px;
+    }
     .legend {
-      margin-top: 24px;
       font-size: 14px;
+      margin-top: 16px;
+      font-family: var(--font-sans);
     }
     .legend div {
       display: flex;
@@ -161,7 +175,7 @@
   <div class="container">
     <h2>Estimate my monthly mortgage payment</h2>
     <div class="flex">
-      <!-- Left: Inputs -->
+      <!-- Inputs -->
       <div class="loan-details">
         <!-- Loan Type -->
         <div class="form-group">
@@ -233,16 +247,15 @@
             <input type="text" id="incomeInput" readonly>
           </div>
         </div>
-        <button onclick="calculateMortgage()">See Details</button>
       </div>
 
-      <!-- Right: Doughnut Chart -->
+      <!-- Doughnut Chart -->
       <div class="chart-container">
         <div class="donut-wrapper">
           <canvas id="breakdownChart"></canvas>
           <div class="donut-center">
-            <div>Your<br>Payment</div>
-            $<span id="chartTotal">0.00</span>
+            Your<br>Payment
+            <span id="chartTotal">0.00</span>
           </div>
         </div>
         <div class="legend">
@@ -258,75 +271,54 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     // Element refs
-    const priceSlider = document.getElementById('priceSlider'),
-          priceInput  = document.getElementById('priceInput'),
-          downSlider  = document.getElementById('downSlider'),
-          downPctIn   = document.getElementById('downPercentInput'),
-          downAmtIn   = document.getElementById('downAmountInput'),
-          rateSlider  = document.getElementById('rateSlider'),
-          rateInput   = document.getElementById('rateInput'),
-          taxSlider   = document.getElementById('taxSlider'),
-          taxInput    = document.getElementById('taxInput'),
-          hoaSlider   = document.getElementById('hoaSlider'),
-          hoaInput    = document.getElementById('hoaInput'),
-          incomeSlider= document.getElementById('incomeSlider'),
-          incomeInput = document.getElementById('incomeInput');
+    const els = [
+      'priceSlider','priceInput','downSlider','downPercentInput','downAmountInput',
+      'rateSlider','rateInput','taxSlider','taxInput','hoaSlider','hoaInput',
+      'incomeSlider','incomeInput','term'
+    ].reduce((acc,id)=>{ acc[id]=document.getElementById(id); return acc },{});
+    const legendPI     = document.getElementById('legendPI'),
+          legendTax    = document.getElementById('legendTax'),
+          legendHazard = document.getElementById('legendHazard'),
+          legendHoa    = document.getElementById('legendHoa'),
+          chartTotal   = document.getElementById('chartTotal');
+    let doughnutChart;
 
-    // Format helpers
-    const fmtCur = v => '$' + Number(v).toLocaleString('en-US',{minimumFractionDigits:2}),
-          fmtPct = v => Number(v).toFixed(3) + '%';
+    // Formatters
+    const fmtCur = v => '$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:2});
+    const fmtPct = v => Number(v).toFixed(3)+'%';
 
-    // Sync functions
-    function updatePrice(){ priceInput.value = fmtCur(priceSlider.value); updateDown(); }
-    function updateDown(){
-      const pct = +downSlider.value;
-      downPctIn.value = pct.toFixed(2) + '%';
-      downAmtIn.value = fmtCur(priceSlider.value * pct/100);
-    }
-    function updateRate(){ rateInput.value = fmtPct(rateSlider.value); }
-    function updateTax(){ taxInput.value = fmtCur(taxSlider.value); }
-    function updateHoa(){ hoaInput.value = fmtCur(hoaSlider.value); }
-    function updateIncome(){ incomeInput.value = fmtCur(incomeSlider.value); }
+    // Update UI & chart
+    function updateAll(){
+      // Sync inputs
+      els.priceInput.value        = fmtCur(els.priceSlider.value);
+      const pct                   = +els.downSlider.value;
+      els.downPercentInput.value  = pct.toFixed(2)+'%';
+      els.downAmountInput.value   = fmtCur(els.priceSlider.value*(pct/100));
+      els.rateInput.value         = fmtPct(els.rateSlider.value);
+      els.taxInput.value          = fmtCur(els.taxSlider.value);
+      els.hoaInput.value          = fmtCur(els.hoaSlider.value);
+      els.incomeInput.value       = fmtCur(els.incomeSlider.value);
 
-    [priceSlider, downSlider, rateSlider, taxSlider, hoaSlider, incomeSlider].forEach(s =>
-      s.addEventListener('input', _=>{
-        updatePrice();
-        updateDown();
-        updateRate();
-        updateTax();
-        updateHoa();
-        updateIncome();
-      })
-    );
-    // One-time init
-    updatePrice(); updateDown(); updateRate();
-    updateTax(); updateHoa(); updateIncome();
+      // Calculations
+      const P    = +els.priceSlider.value;
+      const dp   = +els.downSlider.value/100;
+      const loan = P*(1-dp);
+      const r    = +els.rateSlider.value/100/12;
+      const n    = +els.term.value*12;
+      const taxM = +els.taxSlider.value/12;
+      const hoaM = +els.hoaSlider.value;
+      const insM = 1750/12; 
+      const piM  = loan*r/(1-Math.pow(1+r,-n));
+      const tot  = piM + taxM + insM + hoaM;
 
-    // Doughnut chart instance
-    let doughnut;
+      // Update chart center & legend
+      chartTotal.textContent   = tot.toFixed(2);
+      legendPI.textContent     = piM.toFixed(2);
+      legendTax.textContent    = taxM.toFixed(2);
+      legendHazard.textContent = insM.toFixed(2);
+      legendHoa.textContent    = hoaM.toFixed(2);
 
-    function calculateMortgage(){
-      const P      = +priceSlider.value;
-      const dp     = +downSlider.value/100;
-      const loan   = P * (1 - dp);
-      const r      = +rateSlider.value/100/12;
-      const n      = +document.getElementById('term').value * 12;
-      const taxM   = +taxSlider.value/12;
-      const hoaM   = +hoaSlider.value;
-      const insM   = 1750/12; // fixed hazard
-      const piM    = loan * r / (1 - Math.pow(1+r, -n));
-      const totalM = piM + taxM + insM + hoaM;
-
-      // Update center total
-      document.getElementById('chartTotal').textContent = totalM.toFixed(2);
-      // Update legend
-      document.getElementById('legendPI').textContent     = piM.toFixed(2);
-      document.getElementById('legendTax').textContent    = taxM.toFixed(2);
-      document.getElementById('legendHazard').textContent = insM.toFixed(2);
-      document.getElementById('legendHoa').textContent    = hoaM.toFixed(2);
-
-      // Build doughnut
-      const ctx = document.getElementById('breakdownChart').getContext('2d');
+      // Draw doughnut
       const data = {
         labels: ['P&I','Taxes','Hazard','HOA'],
         datasets: [{
@@ -340,17 +332,22 @@
           borderWidth: 0
         }]
       };
-      if (doughnut) doughnut.destroy();
-      doughnut = new Chart(ctx, {
+      const ctx = document.getElementById('breakdownChart').getContext('2d');
+      if(doughnutChart) doughnutChart.destroy();
+      doughnutChart = new Chart(ctx, {
         type: 'doughnut',
         data,
-        options: {
-          cutout: '70%',
-          responsive: true,
-          plugins: { legend: { display: false } }
-        }
+        options:{ cutout:'70%', responsive:true, plugins:{legend:{display:false}} }
       });
     }
+
+    // Live listeners
+    Object.keys(els).forEach(k=>{
+      els[k].addEventListener('input', updateAll);
+    });
+
+    // Init
+    updateAll();
   </script>
 </body>
 </html>
