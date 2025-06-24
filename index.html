@@ -61,7 +61,6 @@
       align-items: center;
       gap: 12px;
     }
-    /* Enhanced slider styling */
     input[type=range] {
       -webkit-appearance: none;
       width: 100%;
@@ -83,7 +82,7 @@
       border-radius: 50%;
       cursor: pointer;
       box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-      margin-top: -6px; /* center thumb on track */
+      margin-top: -6px;
     }
     input[type=range]::-moz-range-thumb {
       width: 20px; height: 20px;
@@ -114,23 +113,7 @@
       font-family: var(--font-sans);
       font-weight: 600;
     }
-    /* Button (if still used) */
-    button {
-      margin-top: 10px;
-      padding: 12px 24px;
-      background: var(--primary-color);
-      color: #fff;
-      border: none;
-      border-radius: 24px;
-      font-size: 16px;
-      font-family: var(--font-sans);
-      font-weight: 700;
-      cursor: pointer;
-      transition: background .2s;
-    }
-    button:hover { background: #0f1e48; }
 
-    /* Doughnut styles */
     .donut-wrapper {
       position: relative;
       width: 100%;
@@ -187,12 +170,71 @@
     <div class="flex">
       <!-- Inputs -->
       <div class="loan-details">
-        <!-- ... (all the same form-groups as before) -->
-        <!-- For brevity, assume the same sliders/inputs for price, down, rate, tax, HOA, income, term -->
-        <!-- They all have the same IDs as before -->
+        <div class="form-group">
+          <label for="loanType">Loan Type</label>
+          <select id="loanType">
+            <option value="conventional">Conventional</option>
+            <option value="fha">FHA</option>
+            <option value="jumbo">Jumbo</option>
+            <option value="usda">USDA</option>
+            <option value="va">VA</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="term">Term</label>
+          <select id="term">
+            <option value="5">5 Years</option>
+            <option value="10">10 Years</option>
+            <option value="15">15 Years</option>
+            <option value="30" selected>30 Years</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Property Price</label>
+          <div class="slider-input">
+            <input type="range" id="priceSlider" min="0" max="1000000" step="1000" value="350000">
+            <input type="text" id="priceInput" readonly>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Down Payment</label>
+          <div class="slider-input">
+            <input type="range" id="downSlider" min="0" max="100" step="1" value="3">
+            <input type="text" id="downPercentInput">
+            <input type="text" id="downAmountInput" readonly>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Interest Rate</label>
+          <div class="slider-input">
+            <input type="range" id="rateSlider" min="0" max="20" step="0.01" value="6.5">
+            <input type="text" id="rateInput" readonly>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Annual Taxes</label>
+          <div class="slider-input">
+            <input type="range" id="taxSlider" min="0" max="20000" step="100" value="4200">
+            <input type="text" id="taxInput" readonly>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Monthly HOA</label>
+          <div class="slider-input">
+            <input type="range" id="hoaSlider" min="0" max="1000" step="10" value="0">
+            <input type="text" id="hoaInput" readonly>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Annual Income</label>
+          <div class="slider-input">
+            <input type="range" id="incomeSlider" min="0" max="500000" step="5000" value="75000">
+            <input type="text" id="incomeInput" readonly>
+          </div>
+        </div>
       </div>
 
-      <!-- Always-visible Doughnut Chart -->
+      <!-- Doughnut Chart -->
       <div class="chart-container">
         <div class="donut-wrapper">
           <canvas id="breakdownChart"></canvas>
@@ -213,7 +255,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // Grab all elements by IDs
+    // Collect elements
     const els = [
       'priceSlider','priceInput',
       'downSlider','downPercentInput','downAmountInput',
@@ -222,7 +264,7 @@
       'hoaSlider','hoaInput',
       'incomeSlider','incomeInput',
       'term'
-    ].reduce((o,id) => (o[id]=document.getElementById(id), o), {});
+    ].reduce((o,id)=>(o[id]=document.getElementById(id),o),{});
     const legendPI     = document.getElementById('legendPI'),
           legendTax    = document.getElementById('legendTax'),
           legendHazard = document.getElementById('legendHazard'),
@@ -230,7 +272,7 @@
           chartTotal   = document.getElementById('chartTotal');
     let doughnutChart;
 
-    // Formatters
+    // Format helpers
     const fmtCur = v => '$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:2});
     const fmtPct = v => Number(v).toFixed(3)+'%';
 
@@ -260,57 +302,54 @@
     }
 
     function updateAll(){
-      // Sync input displays
-      els.priceInput.value       = fmtCur(els.priceSlider.value);
-      const pct                  = +els.downSlider.value;
-      els.downPercentInput.value = pct.toFixed(2)+'%';
-      els.downAmountInput.value  = fmtCur(els.priceSlider.value*(pct/100));
-      els.rateInput.value        = fmtPct(els.rateSlider.value);
-      els.taxInput.value         = fmtCur(els.taxSlider.value);
-      els.hoaInput.value         = fmtCur(els.hoaSlider.value);
-      els.incomeInput.value      = fmtCur(els.incomeSlider.value);
+      // Sync display
+      els.priceInput.value        = fmtCur(els.priceSlider.value);
+      const pct                   = +els.downSlider.value;
+      els.downPercentInput.value  = pct.toFixed(2)+'%';
+      els.downAmountInput.value   = fmtCur(els.priceSlider.value*(pct/100));
+      els.rateInput.value         = fmtPct(els.rateSlider.value);
+      els.taxInput.value          = fmtCur(els.taxSlider.value);
+      els.hoaInput.value          = fmtCur(els.hoaSlider.value);
+      els.incomeInput.value       = fmtCur(els.incomeSlider.value);
 
-      // Compute payments
-      const P       = +els.priceSlider.value;
-      const dp      = +els.downSlider.value/100;
-      const loan    = P*(1-dp);
-      const r       = +els.rateSlider.value/100/12;
-      const n       = +els.term.value*12;
-      const taxM    = +els.taxSlider.value/12;
-      const hoaM    = +els.hoaSlider.value;
-      const insM    = 1750/12;
-      const piM     = loan*r/(1-Math.pow(1+r,-n));
-      const totalM  = piM + taxM + insM + hoaM;
+      // Calculate
+      const P      = +els.priceSlider.value;
+      const dp     = +els.downSlider.value/100;
+      const loan   = P*(1-dp);
+      const r      = +els.rateSlider.value/100/12;
+      const n      = +els.term.value*12;
+      const taxM   = +els.taxSlider.value/12;
+      const hoaM   = +els.hoaSlider.value;
+      const insM   = 1750/12;
+      const piM    = loan*r/(1-Math.pow(1+r,-n));
+      const totalM = piM + taxM + insM + hoaM;
 
-      // Update center & legend
+      // Update chart center & legend
       chartTotal.textContent   = totalM.toFixed(2);
       legendPI.textContent     = piM.toFixed(2);
       legendTax.textContent    = taxM.toFixed(2);
       legendHazard.textContent = insM.toFixed(2);
       legendHoa.textContent    = hoaM.toFixed(2);
 
-      // **Only update data, do NOT destroy chart**
+      // Update doughnut data
       doughnutChart.data.datasets[0].data = [piM, taxM, insM, hoaM];
       doughnutChart.update();
-      
-      // Fill slider track up to the thumb
+
+      // Fill slider tracks
       Object.values(els).forEach(el => {
-        if(el.type === 'range'){
-          const pct = (el.value - el.min) / (el.max - el.min) * 100;
-          el.style.backgroundSize = `${pct}% 100%`;
+        if (el && el.type === 'range') {
+          const percent = (el.value - el.min) / (el.max - el.min) * 100;
+          el.style.backgroundSize = percent + '% 100%';
         }
       });
     }
 
-    // Attach live listeners
-    Object.values(els).forEach(el => {
-      if(el) el.addEventListener('input', updateAll);
-    });
-
-    // Initialize on load
     window.addEventListener('DOMContentLoaded', () => {
       initChart();
       updateAll();
+      Object.values(els).forEach(el => {
+        if (el) el.addEventListener('input', updateAll);
+      });
     });
   </script>
 </body>
