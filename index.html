@@ -1,0 +1,356 @@
+          <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mortgage Calculator</title>
+  <style>
+    :root {
+      --primary-color: #0052cc;
+      --gray-100: #f0f4f8;
+      --gray-300: #d8d8d8;
+      --gray-500: #7a7a7a;
+      --font-sans: 'Helvetica Neue', Arial, sans-serif;
+      --color-pi: #38c6ff;
+      --color-tax: #f1c40f;
+      --color-hazard: #2ecc71;
+      --color-hoa: #e74c3c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      background: #f5f5f5;
+      color: #333;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+      font-size: 24px;
+      margin-bottom: 24px;
+    }
+    .flex {
+      display: flex;
+      gap: 40px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .loan-details, .chart-container {
+      flex: 1 1 300px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .slider-input {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      background: var(--gray-300);
+      border-radius: 2px;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px; height: 16px;
+      background: var(--primary-color);
+      border: 2px solid #fff;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 2px rgba(0,0,0,0.2);
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 16px; height: 16px;
+      background: var(--primary-color);
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    input[type=text] {
+      width: 80px;
+      font-size: 14px;
+      padding: 8px;
+      border: 1px solid var(--gray-300);
+      border-radius: 4px;
+      background: var(--gray-100);
+      text-align: right;
+    }
+    select {
+      width: 100%;
+      padding: 8px;
+      font-size: 14px;
+      border: 1px solid var(--gray-300);
+      border-radius: 4px;
+      background: #fff;
+    }
+    button {
+      margin-top: 10px;
+      padding: 12px 24px;
+      background: #4a4a4a;
+      color: #fff;
+      border: none;
+      border-radius: 24px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #333;
+    }
+
+    /* --- Doughnut Chart Styles --- */
+    .donut-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 350px;
+      margin: 0 auto;
+    }
+    .donut-wrapper canvas {
+      display: block;
+      width: 100% !important;
+      height: auto !important;
+    }
+    .donut-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      font-size: 24px;
+      font-weight: 600;
+      pointer-events: none;
+    }
+    .donut-center span { font-size: 32px; }
+
+    .legend {
+      margin-top: 24px;
+      font-size: 14px;
+    }
+    .legend div {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .legend-color {
+      display: inline-block;
+      width: 14px; height: 14px;
+      margin-right: 8px;
+      border-radius: 3px;
+    }
+    .pi     { background: var(--color-pi); }
+    .tax    { background: var(--color-tax); }
+    .hazard { background: var(--color-hazard); }
+    .hoa    { background: var(--color-hoa); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Estimate my monthly mortgage payment</h2>
+    <div class="flex">
+      <!-- Left: Inputs -->
+      <div class="loan-details">
+        <!-- Loan Type -->
+        <div class="form-group">
+          <label for="loanType">Loan Type</label>
+          <select id="loanType">
+            <option value="conventional">Conventional</option>
+            <option value="fha">FHA</option>
+            <option value="jumbo">Jumbo</option>
+            <option value="usda">USDA</option>
+            <option value="va">VA</option>
+          </select>
+        </div>
+        <!-- Term -->
+        <div class="form-group">
+          <label for="term">Term</label>
+          <select id="term">
+            <option value="5">5 Years</option>
+            <option value="10">10 Years</option>
+            <option value="15">15 Years</option>
+            <option value="30" selected>30 Years</option>
+          </select>
+        </div>
+        <!-- Property Price -->
+        <div class="form-group">
+          <label>Property Price</label>
+          <div class="slider-input">
+            <input type="range" id="priceSlider" min="0" max="1000000" step="1000" value="350000">
+            <input type="text" id="priceInput" readonly>
+          </div>
+        </div>
+        <!-- Down Payment -->
+        <div class="form-group">
+          <label>Down Payment</label>
+          <div class="slider-input">
+            <input type="range" id="downSlider" min="0" max="100" step="1" value="3">
+            <input type="text" id="downPercentInput">
+            <input type="text" id="downAmountInput" readonly>
+          </div>
+        </div>
+        <!-- Interest Rate -->
+        <div class="form-group">
+          <label>Interest Rate</label>
+          <div class="slider-input">
+            <input type="range" id="rateSlider" min="0" max="20" step="0.01" value="6.5">
+            <input type="text" id="rateInput" readonly>
+          </div>
+        </div>
+        <!-- Annual Taxes -->
+        <div class="form-group">
+          <label>Annual Taxes</label>
+          <div class="slider-input">
+            <input type="range" id="taxSlider" min="0" max="20000" step="100" value="4200">
+            <input type="text" id="taxInput" readonly>
+          </div>
+        </div>
+        <!-- Monthly HOA -->
+        <div class="form-group">
+          <label>Monthly HOA</label>
+          <div class="slider-input">
+            <input type="range" id="hoaSlider" min="0" max="1000" step="10" value="0">
+            <input type="text" id="hoaInput" readonly>
+          </div>
+        </div>
+        <!-- Annual Income -->
+        <div class="form-group">
+          <label>Annual Income</label>
+          <div class="slider-input">
+            <input type="range" id="incomeSlider" min="0" max="500000" step="5000" value="75000">
+            <input type="text" id="incomeInput" readonly>
+          </div>
+        </div>
+        <button onclick="calculateMortgage()">See Details</button>
+      </div>
+
+      <!-- Right: Doughnut Chart -->
+      <div class="chart-container">
+        <div class="donut-wrapper">
+          <canvas id="breakdownChart"></canvas>
+          <div class="donut-center">
+            <div>Your<br>Payment</div>
+            $<span id="chartTotal">0.00</span>
+          </div>
+        </div>
+        <div class="legend">
+          <div><span class="legend-color pi"></span> Principal &amp; Interest: $<span id="legendPI">0.00</span></div>
+          <div><span class="legend-color tax"></span> Taxes: $<span id="legendTax">0.00</span></div>
+          <div><span class="legend-color hazard"></span> Hazard Insurance: $<span id="legendHazard">0.00</span></div>
+          <div><span class="legend-color hoa"></span> HOA: $<span id="legendHoa">0.00</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Element refs
+    const priceSlider = document.getElementById('priceSlider'),
+          priceInput  = document.getElementById('priceInput'),
+          downSlider  = document.getElementById('downSlider'),
+          downPctIn   = document.getElementById('downPercentInput'),
+          downAmtIn   = document.getElementById('downAmountInput'),
+          rateSlider  = document.getElementById('rateSlider'),
+          rateInput   = document.getElementById('rateInput'),
+          taxSlider   = document.getElementById('taxSlider'),
+          taxInput    = document.getElementById('taxInput'),
+          hoaSlider   = document.getElementById('hoaSlider'),
+          hoaInput    = document.getElementById('hoaInput'),
+          incomeSlider= document.getElementById('incomeSlider'),
+          incomeInput = document.getElementById('incomeInput');
+
+    // Format helpers
+    const fmtCur = v => '$' + Number(v).toLocaleString('en-US',{minimumFractionDigits:2}),
+          fmtPct = v => Number(v).toFixed(3) + '%';
+
+    // Sync functions
+    function updatePrice(){ priceInput.value = fmtCur(priceSlider.value); updateDown(); }
+    function updateDown(){
+      const pct = +downSlider.value;
+      downPctIn.value = pct.toFixed(2) + '%';
+      downAmtIn.value = fmtCur(priceSlider.value * pct/100);
+    }
+    function updateRate(){ rateInput.value = fmtPct(rateSlider.value); }
+    function updateTax(){ taxInput.value = fmtCur(taxSlider.value); }
+    function updateHoa(){ hoaInput.value = fmtCur(hoaSlider.value); }
+    function updateIncome(){ incomeInput.value = fmtCur(incomeSlider.value); }
+
+    [priceSlider, downSlider, rateSlider, taxSlider, hoaSlider, incomeSlider].forEach(s =>
+      s.addEventListener('input', _=>{
+        updatePrice();
+        updateDown();
+        updateRate();
+        updateTax();
+        updateHoa();
+        updateIncome();
+      })
+    );
+    // One-time init
+    updatePrice(); updateDown(); updateRate();
+    updateTax(); updateHoa(); updateIncome();
+
+    // Doughnut chart instance
+    let doughnut;
+
+    function calculateMortgage(){
+      const P      = +priceSlider.value;
+      const dp     = +downSlider.value/100;
+      const loan   = P * (1 - dp);
+      const r      = +rateSlider.value/100/12;
+      const n      = +document.getElementById('term').value * 12;
+      const taxM   = +taxSlider.value/12;
+      const hoaM   = +hoaSlider.value;
+      const insM   = 1750/12; // fixed hazard
+      const piM    = loan * r / (1 - Math.pow(1+r, -n));
+      const totalM = piM + taxM + insM + hoaM;
+
+      // Update center total
+      document.getElementById('chartTotal').textContent = totalM.toFixed(2);
+      // Update legend
+      document.getElementById('legendPI').textContent     = piM.toFixed(2);
+      document.getElementById('legendTax').textContent    = taxM.toFixed(2);
+      document.getElementById('legendHazard').textContent = insM.toFixed(2);
+      document.getElementById('legendHoa').textContent    = hoaM.toFixed(2);
+
+      // Build doughnut
+      const ctx = document.getElementById('breakdownChart').getContext('2d');
+      const data = {
+        labels: ['P&I','Taxes','Hazard','HOA'],
+        datasets: [{
+          data: [piM, taxM, insM, hoaM],
+          backgroundColor: [
+            getComputedStyle(document.documentElement).getPropertyValue('--color-pi').trim(),
+            getComputedStyle(document.documentElement).getPropertyValue('--color-tax').trim(),
+            getComputedStyle(document.documentElement).getPropertyValue('--color-hazard').trim(),
+            getComputedStyle(document.documentElement).getPropertyValue('--color-hoa').trim()
+          ],
+          borderWidth: 0
+        }]
+      };
+      if (doughnut) doughnut.destroy();
+      doughnut = new Chart(ctx, {
+        type: 'doughnut',
+        data,
+        options: {
+          cutout: '70%',
+          responsive: true,
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
