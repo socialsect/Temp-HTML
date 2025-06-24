@@ -18,7 +18,7 @@
       --color-hazard: #2ecc71;
       --color-hoa: #e74c3c;
     }
-    * { box-sizing: border-box; margin:0; padding:0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: #f5f5f5;
       font-family: var(--font-sans);
@@ -41,7 +41,6 @@
     .flex {
       display: flex;
       gap: 40px;
-      align-items: flex-start;
       flex-wrap: wrap;
     }
     .loan-details, .chart-container {
@@ -80,7 +79,6 @@
       background: #fff;
       border: 3px solid var(--primary-color);
       border-radius: 50%;
-      cursor: pointer;
       box-shadow: 0 2px 6px rgba(0,0,0,0.15);
       margin-top: -6px;
     }
@@ -89,7 +87,6 @@
       background: #fff;
       border: 3px solid var(--primary-color);
       border-radius: 50%;
-      cursor: pointer;
       box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
     input[type=text] {
@@ -113,12 +110,39 @@
       font-family: var(--font-sans);
       font-weight: 600;
     }
+    button {
+      margin-top: 20px;
+      padding: 12px 24px;
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: 24px;
+      font-size: 16px;
+      font-family: var(--font-sans);
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    button:hover { background: #0f1e48; }
+
+    .result {
+      display: none;
+      margin-top: 24px;
+    }
+    .result h3 {
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+    .result p {
+      font-size: 14px;
+      margin: 4px 0;
+    }
 
     .donut-wrapper {
       position: relative;
       width: 100%;
       max-width: 350px;
-      margin: 0 auto 24px;
+      margin-bottom: 24px;
     }
     .donut-wrapper canvas {
       display: block;
@@ -131,10 +155,10 @@
       transform: translate(-50%, -50%);
       text-align: center;
       font-weight: 600;
-      pointer-events: none;
       line-height: 1.2;
       color: var(--gray-500);
       font-family: var(--font-sans);
+      pointer-events: none;
     }
     .donut-center span {
       display: block;
@@ -144,7 +168,6 @@
     }
     .legend {
       font-size: 14px;
-      margin-top: 16px;
       font-family: var(--font-sans);
     }
     .legend div {
@@ -153,7 +176,6 @@
       margin-bottom: 8px;
     }
     .legend-color {
-      display: inline-block;
       width: 14px; height: 14px;
       margin-right: 8px;
       border-radius: 3px;
@@ -193,7 +215,7 @@
           <label>Property Price</label>
           <div class="slider-input">
             <input type="range" id="priceSlider" min="0" max="1000000" step="1000" value="350000">
-            <input type="text" id="priceInput" readonly>
+            <input type="text" id="priceInput">
           </div>
         </div>
         <div class="form-group">
@@ -201,36 +223,44 @@
           <div class="slider-input">
             <input type="range" id="downSlider" min="0" max="100" step="1" value="3">
             <input type="text" id="downPercentInput">
-            <input type="text" id="downAmountInput" readonly>
+            <input type="text" id="downAmountInput">
           </div>
         </div>
         <div class="form-group">
           <label>Interest Rate</label>
           <div class="slider-input">
             <input type="range" id="rateSlider" min="0" max="20" step="0.01" value="6.5">
-            <input type="text" id="rateInput" readonly>
+            <input type="text" id="rateInput">
           </div>
         </div>
         <div class="form-group">
           <label>Annual Taxes</label>
           <div class="slider-input">
             <input type="range" id="taxSlider" min="0" max="20000" step="100" value="4200">
-            <input type="text" id="taxInput" readonly>
+            <input type="text" id="taxInput">
           </div>
         </div>
         <div class="form-group">
           <label>Monthly HOA</label>
           <div class="slider-input">
             <input type="range" id="hoaSlider" min="0" max="1000" step="10" value="0">
-            <input type="text" id="hoaInput" readonly>
+            <input type="text" id="hoaInput">
           </div>
         </div>
         <div class="form-group">
           <label>Annual Income</label>
           <div class="slider-input">
             <input type="range" id="incomeSlider" min="0" max="500000" step="5000" value="75000">
-            <input type="text" id="incomeInput" readonly>
+            <input type="text" id="incomeInput">
           </div>
+        </div>
+        <button id="getResults">Get Results</button>
+        <div class="result" id="result">
+          <h3>Your Payment: $<span id="monthlyPayment">0.00</span></h3>
+          <p>Principal & Interest: $<span id="pi">0.00</span></p>
+          <p>Taxes & HOA: $<span id="taxes">0.00</span></p>
+          <p>Hazard Insurance: $<span id="hazard">0.00</span></p>
+          <p>Total Monthly: $<span id="total">0.00</span></p>
         </div>
       </div>
 
@@ -244,9 +274,9 @@
           </div>
         </div>
         <div class="legend">
-          <div><span class="legend-color pi"></span> Principal &amp; Interest: $<span id="legendPI">0.00</span></div>
+          <div><span class="legend-color pi"></span> P&I: $<span id="legendPI">0.00</span></div>
           <div><span class="legend-color tax"></span> Taxes: $<span id="legendTax">0.00</span></div>
-          <div><span class="legend-color hazard"></span> Hazard Insurance: $<span id="legendHazard">0.00</span></div>
+          <div><span class="legend-color hazard"></span> Hazard: $<span id="legendHazard">0.00</span></div>
           <div><span class="legend-color hoa"></span> HOA: $<span id="legendHoa">0.00</span></div>
         </div>
       </div>
@@ -255,100 +285,145 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // Collect elements
-    const els = [
-      'priceSlider','priceInput',
-      'downSlider','downPercentInput','downAmountInput',
-      'rateSlider','rateInput',
-      'taxSlider','taxInput',
-      'hoaSlider','hoaInput',
-      'incomeSlider','incomeInput',
-      'term'
-    ].reduce((o,id)=>(o[id]=document.getElementById(id),o),{});
+    // Element references
+    const els = ['price','down','rate','tax','hoa','income'].reduce((o,key)=>{
+      o[key+'Slider'] = document.getElementById(key+'Slider');
+      o[key+'Input']  = document.getElementById(key+'Input');
+      return o;
+    }, {
+      term: document.getElementById('term'),
+      getResults: document.getElementById('getResults'),
+      result: document.getElementById('result'),
+    });
     const legendPI     = document.getElementById('legendPI'),
           legendTax    = document.getElementById('legendTax'),
           legendHazard = document.getElementById('legendHazard'),
           legendHoa    = document.getElementById('legendHoa'),
           chartTotal   = document.getElementById('chartTotal');
+    const monthlyPayment = document.getElementById('monthlyPayment'),
+          piField        = document.getElementById('pi'),
+          taxesField     = document.getElementById('taxes'),
+          hazardField    = document.getElementById('hazard'),
+          totalField     = document.getElementById('total');
     let doughnutChart;
 
-    // Format helpers
-    const fmtCur = v => '$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:2});
-    const fmtPct = v => Number(v).toFixed(3)+'%';
+    // Formatters
+    const fmtCur = v => '$' + Number(v).toLocaleString('en-US',{minimumFractionDigits:2});
+    const fmtPct = v => Number(v).toFixed(3) + '%';
 
-    function initChart(){
+    function initChart() {
       const ctx = document.getElementById('breakdownChart').getContext('2d');
       doughnutChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
           labels: ['P&I','Taxes','Hazard','HOA'],
-          datasets: [{
-            data: [0,0,0,0],
+          datasets: [{ data:[0,0,0,0],
             backgroundColor: [
               getComputedStyle(document.documentElement).getPropertyValue('--color-pi').trim(),
               getComputedStyle(document.documentElement).getPropertyValue('--color-tax').trim(),
               getComputedStyle(document.documentElement).getPropertyValue('--color-hazard').trim(),
               getComputedStyle(document.documentElement).getPropertyValue('--color-hoa').trim()
             ],
-            borderWidth: 0
+            borderWidth:0
           }]
         },
-        options: {
-          cutout: '70%',
-          responsive: true,
-          plugins: { legend: { display: false } }
-        }
+        options:{cutout:'70%',responsive:true,plugins:{legend:{display:false}}}
       });
     }
 
-    function updateAll(){
-      // Sync display
-      els.priceInput.value        = fmtCur(els.priceSlider.value);
-      const pct                   = +els.downSlider.value;
-      els.downPercentInput.value  = pct.toFixed(2)+'%';
-      els.downAmountInput.value   = fmtCur(els.priceSlider.value*(pct/100));
-      els.rateInput.value         = fmtPct(els.rateSlider.value);
-      els.taxInput.value          = fmtCur(els.taxSlider.value);
-      els.hoaInput.value          = fmtCur(els.hoaSlider.value);
-      els.incomeInput.value       = fmtCur(els.incomeSlider.value);
+    function updateValues() {
+      // sync sliders → inputs
+      els.priceInput.value = fmtCur(els.priceSlider.value);
+      let pct = +els.downSlider.value;
+      els.downInput.value = fmtPct(pct);
+      els.downSliderPct = pct; // store for amount calc
+      els.downAmountInput.value = fmtCur(els.priceSlider.value * pct/100);
+      els.rateInput.value = fmtPct(els.rateSlider.value);
+      els.taxInput.value = fmtCur(els.taxSlider.value);
+      els.hoaInput.value = fmtCur(els.hoaSlider.value);
+      els.incomeInput.value = fmtCur(els.incomeSlider.value);
 
-      // Calculate
-      const P      = +els.priceSlider.value;
-      const dp     = +els.downSlider.value/100;
-      const loan   = P*(1-dp);
-      const r      = +els.rateSlider.value/100/12;
-      const n      = +els.term.value*12;
-      const taxM   = +els.taxSlider.value/12;
-      const hoaM   = +els.hoaSlider.value;
-      const insM   = 1750/12;
-      const piM    = loan*r/(1-Math.pow(1+r,-n));
+      // fill slider tracks
+      Object.values(els).forEach(el => {
+        if(el && el.type==='range'){
+          let percent = (el.value - el.min)/(el.max - el.min)*100;
+          el.style.backgroundSize = percent + '% 100%';
+        }
+      });
+
+      // compute chart
+      const P    = +els.priceSlider.value;
+      const dp   = +els.downSlider.value/100;
+      const loan = P*(1-dp);
+      const r    = +els.rateSlider.value/100/12;
+      const n    = +els.term.value*12;
+      const taxM = +els.taxSlider.value/12;
+      const hoaM = +els.hoaSlider.value;
+      const insM = 1750/12;
+      const piM  = loan*r/(1-Math.pow(1+r,-n));
       const totalM = piM + taxM + insM + hoaM;
 
-      // Update chart center & legend
+      // update chart
+      doughnutChart.data.datasets[0].data = [piM, taxM, insM, hoaM];
+      doughnutChart.update();
+
+      // update center & legend
       chartTotal.textContent   = totalM.toFixed(2);
       legendPI.textContent     = piM.toFixed(2);
       legendTax.textContent    = taxM.toFixed(2);
       legendHazard.textContent = insM.toFixed(2);
       legendHoa.textContent    = hoaM.toFixed(2);
 
-      // Update doughnut data
-      doughnutChart.data.datasets[0].data = [piM, taxM, insM, hoaM];
-      doughnutChart.update();
+      return { piM, taxM, insM, hoaM, totalM };
+    }
 
-      // Fill slider tracks
-      Object.values(els).forEach(el => {
-        if (el && el.type === 'range') {
-          const percent = (el.value - el.min) / (el.max - el.min) * 100;
-          el.style.backgroundSize = percent + '% 100%';
-        }
+    function bindInputs() {
+      // two-way: input → slider
+      ['price','rate','tax','hoa','income'].forEach(key => {
+        els[key+'Input'].addEventListener('change', e => {
+          let num = parseFloat(e.target.value.replace(/[^0-9.]/g,''))||0;
+          els[key+'Slider'].value = Math.min(Math.max(num, els[key+'Slider'].min), els[key+'Slider'].max);
+          updateValues();
+        });
       });
+      // down % input
+      els.downPercentInput = document.getElementById('downPercentInput');
+      els.downAmountInput  = document.getElementById('downAmountInput');
+      els.downPercentInput.addEventListener('change', e => {
+        let pct = parseFloat(e.target.value.replace(/[^0-9.]/g,''))||0;
+        pct = Math.min(Math.max(pct,0),100);
+        els.downSlider.value = pct;
+        updateValues();
+      });
+      // down amount input
+      els.downAmountInput.addEventListener('change', e => {
+        let amt = parseFloat(e.target.value.replace(/[^0-9.]/g,''))||0;
+        let pct = amt / (+els.priceSlider.value) * 100;
+        pct = Math.min(Math.max(pct,0),100);
+        els.downSlider.value = pct;
+        updateValues();
+      });
+      // sliders
+      Object.values(els).forEach(el => {
+        if(el && el.type==='range') el.addEventListener('input', updateValues);
+      });
+      // term select
+      els.term.addEventListener('change', updateValues);
     }
 
     window.addEventListener('DOMContentLoaded', () => {
       initChart();
-      updateAll();
-      Object.values(els).forEach(el => {
-        if (el) el.addEventListener('input', updateAll);
+      bindInputs();
+      updateValues();
+      // Get Results button
+      els.getResults.addEventListener('click', () => {
+        const { piM, taxM, insM, hoaM, totalM } = updateValues();
+        monthlyPayment.textContent = totalM.toFixed(2);
+        piField.textContent        = piM.toFixed(2);
+        taxesField.textContent     = (taxM+hoaM).toFixed(2);
+        hazardField.textContent    = insM.toFixed(2);
+        totalField.textContent     = totalM.toFixed(2);
+        els.result.style.display   = 'block';
       });
     });
   </script>
